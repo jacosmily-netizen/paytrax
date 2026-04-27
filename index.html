@@ -1,0 +1,815 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#0078d4">
+  <title>PayTrax</title>
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon.png">
+  <link rel="manifest" href="/manifest.json">
+  <style>
+    :root {
+      --bg: #121212; --fg: #ffffff; --card: #1e1e1e;
+      --accent: #0078d4; --muted: #a0a0a0; --border: #333;
+      --success: #28a745; --danger: #dc3545; --input-bg: #2a2a2a;
+      --holiday: #ff6b35;
+    }
+    body.light {
+      --bg: #f4f7f6; --fg: #1a1a1a; --card: #ffffff;
+      --accent: #005a9e; --muted: #666; --border: #e0e0e0; --input-bg: #f0f0f0;
+      --holiday: #e85d04;
+    }
+    html, body {
+      margin:0; padding:0; overflow: hidden;
+      background:var(--bg); color:var(--fg);
+      overscroll-behavior: none;
+      height: 100%;
+    }
+    body {
+      font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial;
+      transition: background 0.3s;
+    }
+    header {
+      background:var(--bg); color:var(--fg); padding:14px; text-align:center;
+      font-size:18px; font-weight:700; border-bottom:1px solid var(--border);
+      position: fixed; top: 0; width: 100%; z-index: 100;
+      box-sizing: border-box; display:flex; align-items:center; justify-content:center;
+    }
+   .header-logo {
+      height:28px; width:28px; margin-right:10px; border-radius:7px;
+    }
+    #pageWrapper {
+      display: flex;
+      width: 300vw;
+      transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      will-change: transform;
+      touch-action: pan-y;
+      height: calc(100vh - 130px);
+      margin-top: 61px;
+      overflow: hidden;
+    }
+   .page {
+      padding: 16px;
+      width: 100vw;
+      flex-shrink: 0;
+      height: 100%;
+      box-sizing: border-box;
+      overflow-y: auto;
+      overflow-x: hidden;
+      -webkit-overflow-scrolling: touch;
+    }
+   .page#home { overflow-y: hidden; }
+   .home-card {
+      background:var(--card); border-radius:16px; padding:16px;
+      margin-bottom:16px; border: 1px solid var(--border);
+      position: relative;
+    }
+   .home-card.holiday { border-left: 4px solid var(--holiday); }
+   .home-card h4 { margin:0 0 10px; font-size:12px; color: var(--accent); text-transform: uppercase; letter-spacing: 1px; }
+   .progress-bubble {
+      display:flex; align-items:center; gap:16px;
+      background:var(--card); border-radius:14px;
+      padding:12px 16px; margin:12px 0; border: 1px solid var(--border);
+    }
+   .progress-percent {
+      font-size: 24px; font-weight: 800; color: var(--accent);
+      min-width: 70px;
+    }
+   .progress-info { flex: 1; }
+   .progress-label {
+      font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px;
+    }
+   .progress-amount {
+      font-size: 14px; font-weight: 600; margin-top: 2px;
+    }
+   .cycle-nav {
+      display: flex; justify-content: space-between; align-items: center;
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 12px; padding: 6px; margin-bottom: 16px;
+    }
+   .cycle-btn {
+      background: var(--accent); color: white; border: none;
+      padding: 8px 16px; border-radius: 10px; font-weight: bold; cursor: pointer;
+    }
+   .cycle-status {
+      text-align: center; font-weight: 700; font-size: 15px;
+      color: var(--accent); margin-bottom: 16px;
+    }
+   .input-bubble {
+      display:flex; align-items:center; gap:12px;
+      background:var(--card); border-radius:14px;
+      padding:12px 16px; margin:12px 0; border: 1px solid var(--border);
+    }
+   .input-bubble input[type="time"] {
+      flex:1; background:transparent; color:var(--fg); border:none; font-size:16px; outline: none;
+    }
+   .log-tile,.archive-tile {
+      background:var(--card); border-radius:14px; border: 1px solid var(--border);
+      padding:16px; margin-bottom:12px; cursor: pointer;
+      position: relative;
+    }
+   .log-tile.holiday { border-left: 4px solid var(--holiday); }
+   .archive-tile { position: relative; }
+   .row { display:flex; justify-content:space-between; margin:8px 0; font-size: 14px; }
+   .edit-form,.archive-details { padding-top: 15px; border-top: 1px solid var(--border); margin-top: 10px; }
+   .edit-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
+   .edit-grid label { font-size: 10px; color: var(--muted); text-transform: uppercase; display:block; margin-bottom:4px; }
+   .theme-input {
+      background: var(--input-bg); color: var(--fg); border: 1px solid var(--border);
+      padding: 10px; border-radius: 8px; font-size: 14px; outline: none; box-sizing: border-box; width: 100%;
+    }
+   .btn-row { display: flex; gap: 8px; }
+   .btn-save { flex: 2; background: var(--accent); color: white; border: none; padding: 10px; border-radius: 8px; font-weight: 600; cursor: pointer; }
+   .btn-clear { flex: 1; background: var(--danger); color: white; border: none; padding: 10px; border-radius: 8px; font-weight: 600; cursor: pointer; }
+   .btn-export { background: var(--success); color: white; border: none; padding: 8px 12px; border-radius: 8px; font-weight: 600; cursor: pointer; }
+    #settingsDrawer {
+      position: fixed; top: 0; left: -100%; width: 85%; max-width: 350px;
+      height: 100%; background: var(--card); z-index: 2000; transition: 0.3s;
+      display: flex; flex-direction: column;
+    }
+    #settingsDrawer.open { left: 0; }
+   .drawer-content { flex: 1; overflow-y: auto; padding: 20px; }
+   .menu-btn {
+      width: 100%; text-align: center; background: var(--input-bg);
+      color: var(--fg); border: 1px solid var(--border); padding: 15px;
+      border-radius: 12px; margin-bottom: 10px; font-weight: 600;
+    }
+   .submenu { display: none; padding: 5px 10px 15px; }
+   .submenu.active { display: block; }
+   .subcat-title { font-size: 11px; color: var(--accent); text-transform: uppercase; margin: 15px 0 8px; font-weight: 700; letter-spacing: 0.5px; }
+    nav {
+      position:fixed; bottom:0; width:100%; display:flex;
+      background:var(--card); border-top:1px solid var(--border); padding:10px 0; z-index: 100;
+    }
+    nav button { flex:1; background:transparent; border:none; color:var(--muted); font-size:12px; font-weight:600; outline: none; }
+    nav button.active { color: var(--accent); }
+   .fab {
+      position: fixed; bottom: 100px; right: 20px; width: 56px; height: 56px;
+      border-radius: 28px; background: var(--accent); color: white; border: none;
+      font-size: 24px; box-shadow: 0 4px 12px rgba(0,0,0,0.3); z-index: 99; cursor: pointer;
+    }
+    #customModal {
+      display:none; position:fixed; top:0; left:0; width:100%; height:100%;
+      background:rgba(0,0,0,0.8); backdrop-filter: blur(4px);
+      z-index:3000; align-items:center; justify-content:center;
+    }
+   .modal-box { background:var(--card); padding:24px; border-radius:20px; width:80%; max-width:300px; text-align:center; border: 1px solid var(--border); }
+   .view-toggle { display:flex; gap:8px; margin-bottom:12px; }
+   .view-toggle button { flex:1; padding:8px; border:1px solid var(--border); background:var(--input-bg); color:var(--fg); border-radius:8px; }
+   .view-toggle button.active { background:var(--accent); color:white; border-color:var(--accent); }
+   .toggle-group { display:flex; gap:8px; margin-bottom:10px; }
+   .toggle-group button { flex:1; padding:10px; border:1px solid var(--border); background:var(--input-bg); color:var(--fg); border-radius:8px; }
+   .toggle-group button.active { background:var(--accent); color:white; border-color:var(--accent); }
+  </style>
+</head>
+<body>
+  <header>
+    <div id="settingsBtn" style="position:absolute; left:20px; cursor:pointer; font-size: 24px;">☰</div>
+    <img src="/images/icon-192.png" class="header-logo" alt="PayTrax">
+    PayTrax
+  </header>
+
+  <div id="pageWrapper">
+    <div id="home" class="page">
+      <div class="home-card">
+        <h4>Today</h4>
+        <p id="todaySummary">No hours logged.</p>
+        <p id="todayPay" style="font-size: 13px; color: var(--muted); margin: 0;">Earnings: R0.00</p>
+      </div>
+      <div class="input-bubble">
+        <label style="font-size: 11px; color: var(--muted); min-width: 60px;">IN</label>
+        <input type="time" id="clockInInput">
+        <button id="clockInBtn" style="background: var(--accent); border:none; color:white; border-radius:8px; padding:6px 12px;">Set</button>
+      </div>
+      <div class="input-bubble">
+        <label style="font-size: 11px; color: var(--muted); min-width: 60px;">OUT</label>
+        <input type="time" id="clockOutInput">
+        <button id="clockOutBtn" style="background: var(--accent); border:none; color:white; border-radius:8px; padding:6px 12px;">Set</button>
+      </div>
+      <div class="progress-bubble">
+        <div class="progress-percent" id="progressPercent">0%</div>
+        <div class="progress-info">
+          <div class="progress-label">Current Cycle</div>
+          <div class="progress-amount" id="progressAmount">R0 / R0</div>
+        </div>
+      </div>
+      <div id="homeEstimate"></div>
+    </div>
+
+    <div id="logs" class="page">
+      <div class="cycle-nav">
+        <button class="cycle-btn" onclick="changeCycle(-1)">←</button>
+        <div id="cycleLabel" style="font-size:12px; font-weight:bold;">Cycle Period</div>
+        <button class="cycle-btn" onclick="changeCycle(1)">→</button>
+      </div>
+      <div class="view-toggle">
+        <button id="cycleViewBtn" class="active" onclick="setView('cycle')">Full Cycle</button>
+        <button id="weekViewBtn" onclick="setView('week')">This Week</button>
+        <button class="btn-export" onclick="showExportModal()">CSV ↓</button>
+      </div>
+      <div id="cycleStatus" class="cycle-status">Current Cycle</div>
+      <div id="logTiles"></div>
+      <div id="monthlyTotal"></div>
+    </div>
+
+    <div id="history" class="page">
+      <h2 style="font-size:18px; margin-left: 5px;">Archives</h2>
+      <div id="historyTables"></div>
+      <button class="fab" onclick="showArchiveModal()">+</button>
+    </div>
+  </div>
+
+  <div id="settingsDrawer">
+    <div style="padding: 20px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center;">
+      <span style="font-weight: 700;">Menu</span>
+      <span id="closeSettingsBtn" style="cursor:pointer; font-size: 20px;">✕</span>
+    </div>
+    <div class="drawer-content">
+      <button class="menu-btn" onclick="toggleSub('subPay')">Financials & Rules</button>
+      <div id="subPay" class="submenu">
+        <div class="subcat-title">Pay Details</div>
+        <label style="font-size:11px; color:var(--muted)">Hourly Rate (R)</label>
+        <input type="number" id="rateInput" class="theme-input" style="margin-bottom:10px;">
+        <label style="font-size:11px; color:var(--muted)">Monthly Target (R)</label>
+        <input type="number" id="targetInput" class="theme-input" style="margin-bottom:10px;">
+        <label style="font-size:11px; color:var(--muted)">Bonus (% of Basic)</label>
+        <input type="number" id="bonusInput" class="theme-input" step="0.1">
+        <div class="subcat-title">Allowances</div>
+        <label style="font-size:11px; color:var(--muted)">Medical Allowance (R)</label>
+        <input type="number" id="medicalInput" class="theme-input" style="margin-bottom:10px;">
+        <label style="font-size:11px; color:var(--muted)">Accommodation Allowance (R)</label>
+        <input type="number" id="accomInput" class="theme-input" style="margin-bottom:10px;">
+        <label style="font-size:11px; color:var(--muted)">Other Allowance (R)</label>
+        <input type="number" id="otherInput" class="theme-input" style="margin-bottom:10px;">
+        <label style="font-size:11px; color:var(--muted)">Pension Contribution (R)</label>
+        <input type="number" id="pensionInput" class="theme-input" style="margin-bottom:10px;">
+        <label style="font-size:11px; color:var(--muted)">Pension Type</label>
+        <div class="toggle-group">
+          <button id="pensionDeductBtn" onclick="setPensionType('deduction')">Deduction</button>
+          <button id="pensionBenefitBtn" onclick="setPensionType('benefit')">Benefit</button>
+        </div>
+        <div class="subcat-title">Rules</div>
+        <label style="font-size:11px; color:var(--muted)">OT Threshold (Hrs)</label>
+        <input type="number" id="otThresholdInput" class="theme-input" style="margin-bottom:10px;">
+        <label style="font-size:11px; color:var(--muted)">Cycle Start Day</label>
+        <input type="number" id="cycleStartInput" class="theme-input" style="margin-bottom:10px;">
+        <label style="font-size:11px; color:var(--muted)">Daily Shift Inc (R)</label>
+        <input type="number" id="shiftIncInput" class="theme-input">
+      </div>
+      <button class="menu-btn" onclick="toggleSub('subApp')">App Settings</button>
+      <div id="subApp" class="submenu">
+        <label style="font-size:11px; color:var(--muted)">Country</label>
+        <select id="countryInput" class="theme-input" style="margin-bottom:10px;">
+          <option value="ZA">South Africa</option>
+          <option value="US">United States</option>
+          <option value="GB">United Kingdom</option>
+        </select>
+        <button id="themeToggleBtn" class="theme-input" style="margin-bottom:10px; text-align: left;">Switch Theme</button>
+        <button id="clearDataBtn" class="theme-input" style="color: var(--danger); text-align: left;">Wipe All Data</button>
+      </div>
+      <button id="saveSettingsBtn" style="width:100%; background:var(--accent); color:white; border:none; padding:15px; border-radius:12px; font-weight:700; margin-top: 10px;">Apply Changes</button>
+    </div>
+  </div>
+
+  <div id="customModal">
+    <div class="modal-box">
+      <h3 id="modalTitle" style="margin-top:0">Archive Cycle?</h3>
+      <p id="modalText" style="color:var(--muted); font-size:14px;">Saves current logs and clears view.</p>
+      <button id="modalConfirmBtn" onclick="confirmModalAction()" style="width:100%; padding:12px; background:var(--accent); color:white; border:none; border-radius:10px; font-weight:700;">Yes, Archive</button>
+      <button onclick="document.getElementById('customModal').style.display='none'" style="width:100%; padding:12px; background:transparent; color:var(--muted); border:none; margin-top:5px;">Cancel</button>
+    </div>
+  </div>
+
+  <nav>
+    <button data-page="home" class="active">HOME</button>
+    <button data-page="logs">LOGS</button>
+    <button data-page="history">HISTORY</button>
+  </nav>
+
+  <div id="toast" style="visibility:hidden; position:fixed; bottom:110px; left:50%; transform:translateX(-50%); background:var(--accent); color:white; padding:8px 20px; border-radius:20px; font-size:13px; z-index:9999;">Saved</div>
+    <script>
+let cfg = JSON.parse(localStorage.getItem("settings") || '{"rate":150,"target":20000,"bonus":0,"medical":0,"accom":0,"other":0,"pension":0,"pensionType":"deduction","otThreshold":8,"cycleStart":16,"shiftInc":0,"country":"ZA"}');
+let viewDate = new Date();
+let currentView = 'cycle';
+let modalAction = null;
+let modalActionId = null;
+let currentPage = 'home';
+const pages = ['home','logs','history'];
+let touchStartX = 0;
+let touchStartY = 0;
+let isDragging = false;
+let isScrolling = false;
+let startTranslate = 0;
+
+const HOLIDAYS = {
+  'ZA': {'01-01':'New Year','03-21':'Human Rights Day','04-27':'Freedom Day','05-01':'Workers Day','06-16':'Youth Day','08-09':'Women Day','09-24':'Heritage Day','12-16':'Reconciliation Day','12-25':'Christmas','12-26':'Goodwill Day'},
+  'US': {'01-01':'New Year','07-04':'Independence Day','12-25':'Christmas','11-28':'Thanksgiving'},
+  'GB': {'01-01':'New Year','12-25':'Christmas','12-26':'Boxing Day'}
+};
+
+function toggleSub(id) { document.getElementById(id).classList.toggle('active'); }
+function changeCycle(n) { viewDate.setMonth(viewDate.getMonth() + n); renderLogs(); }
+function setView(v) {
+  currentView = v;
+  document.getElementById('cycleViewBtn').classList.toggle('active', v==='cycle');
+  document.getElementById('weekViewBtn').classList.toggle('active', v==='week');
+  renderLogs();
+}
+
+function setPensionType(type) {
+  cfg.pensionType = type;
+  document.getElementById('pensionDeductBtn').classList.toggle('active', type==='deduction');
+  document.getElementById('pensionBenefitBtn').classList.toggle('active', type==='benefit');
+}
+
+function calculatePAYE(taxable) {
+    const annual = parseFloat(taxable) * 12;
+    let tax = 0;
+    if(annual <= 237100) tax = annual * 0.18;
+    else if(annual <= 370500) tax = 42678 + (annual-237100)*0.26;
+    else if(annual <= 512800) tax = 77362 + (annual-370500)*0.31;
+    else if(annual <= 673000) tax = 121475 + (annual-512800)*0.36;
+    else if(annual <= 857900) tax = 179147 + (annual-673000)*0.39;
+    else if(annual <= 1817000) tax = 251258 + (annual-857900)*0.41;
+    else tax = 644489 + (annual-1817000)*0.45;
+    return Math.max(0, (tax - 17235) / 12);
+}
+
+function getHours(inTime, outTime, dateStr) {
+    if(!inTime ||!outTime) return 0;
+    let start = new Date(dateStr + "T" + inTime);
+    let end = new Date(dateStr + "T" + outTime);
+    if(end < start) end.setDate(end.getDate() + 1);
+    return Math.max(0, (end - start) / 3600000);
+}
+
+function toLocalDateStr(date) {
+    const y = date.getFullYear();
+    const m = ('0'+(date.getMonth()+1)).slice(-2);
+    const d = ('0'+date.getDate()).slice(-2);
+    return `${y}-${m}-${d}`;
+}
+
+function isHoliday(dateStr) {
+    const mmdd = dateStr.slice(5);
+    const holidays = HOLIDAYS[cfg.country] || {};
+    return holidays.hasOwnProperty(mmdd);
+}
+
+function isDoubleTime(dateStr) {
+    const d = new Date(dateStr + 'T12:00:00');
+    return isHoliday(dateStr) || d.getDay() === 0;
+}
+
+function getCurrentCycleBounds() {
+    let today = new Date();
+    let cycleStartDay = parseInt(cfg.cycleStart);
+    let cycleMonth = today.getMonth();
+    let cycleYear = today.getFullYear();
+    if(today.getDate() < cycleStartDay) {
+        cycleMonth -= 1;
+        if(cycleMonth < 0) { cycleMonth = 11; cycleYear -= 1; }
+    }
+    let start = new Date(cycleYear, cycleMonth, cycleStartDay);
+    let end = new Date(cycleYear, cycleMonth + 1, cycleStartDay - 1);
+    return {start, end};
+}
+
+function getViewCycleBounds() {
+    let cycleStartDay = parseInt(cfg.cycleStart);
+    let cycleMonth = viewDate.getMonth();
+    let cycleYear = viewDate.getFullYear();
+    if(viewDate.getDate() < cycleStartDay) {
+        cycleMonth -= 1;
+        if(cycleMonth < 0) { cycleMonth = 11; cycleYear -= 1; }
+    }
+    let start = new Date(cycleYear, cycleMonth, cycleStartDay);
+    let end = new Date(cycleYear, cycleMonth + 1, cycleStartDay - 1);
+    return {start, end};
+}
+
+function calculateCycleStats(start, end) {
+    const logs = JSON.parse(localStorage.getItem("logs") || "{}");
+    let stats = { basic: 0, ot: 0, double: 0, shifts: 0 };
+
+    for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+        let key = toLocalDateStr(d);
+        let entry = logs[key] || { in: "", out: "" };
+        let h = getHours(entry.in, entry.out, key);
+        let isDT = isDoubleTime(key);
+
+        if(isDT) {
+            stats.double += h * parseFloat(cfg.rate) * 2;
+        } else {
+            let dayOT = Math.max(0, h - parseFloat(cfg.otThreshold));
+            let dayBasic = h - dayOT;
+            stats.basic += dayBasic * parseFloat(cfg.rate);
+            stats.ot += dayOT * parseFloat(cfg.rate) * 1.5;
+        }
+        if(h > 0) stats.shifts += parseFloat(cfg.shiftInc || 0);
+    }
+
+    const bonus = parseFloat(stats.basic) * (parseFloat(cfg.bonus) / 100);
+    const allowances = parseFloat(cfg.medical || 0) + parseFloat(cfg.accom || 0) + parseFloat(cfg.other || 0);
+    const gross = parseFloat(stats.basic) + parseFloat(stats.ot) + parseFloat(stats.double) + bonus + allowances + parseFloat(stats.shifts);
+    const tax = calculatePAYE(gross);
+    const pension = parseFloat(cfg.pension || 0);
+    const net = cfg.pensionType === 'benefit'? gross - tax + pension : gross - tax - pension;
+
+    return {stats, bonus, allowances, gross, tax, pension, net};
+}
+
+function renderEstimateCard(stats, bonus, allowances, gross, tax, pension, net, title) {
+    return `
+        <div class="home-card" style="border-left:4px solid var(--accent)">
+            <h4>${title}</h4>
+            <div class="row"><span>Basic Pay:</span><span>R${stats.basic.toFixed(2)}</span></div>
+            ${stats.ot>0?`<div class="row"><span>Overtime (1.5x):</span><span>R${stats.ot.toFixed(2)}</span></div>`:''}
+            ${stats.double>0?`<div class="row"><span>Double Time (2x):</span><span>R${stats.double.toFixed(2)}</span></div>`:''}
+            ${bonus>0?`<div class="row"><span>Bonus:</span><span>R${bonus.toFixed(2)}</span></div>`:''}
+            ${allowances>0?`<div class="row"><span>Allowances:</span><span>R${allowances.toFixed(2)}</span></div>`:''}
+            ${stats.shifts>0?`<div class="row"><span>Shift Inc:</span><span>R${stats.shifts.toFixed(2)}</span></div>`:''}
+            <div class="row" style="font-weight:700; border-top:1px solid var(--border); padding-top:8px; margin-top:8px;"><span>GROSS:</span><span>R${gross.toFixed(2)}</span></div>
+            <div class="row" style="color:var(--danger)"><span>PAYE Tax:</span><span>-R${tax.toFixed(2)}</span></div>
+            ${pension>0?`<div class="row" style="color:${cfg.pensionType==='benefit'?'var(--success)':'var(--danger)'}"><span>Pension (${cfg.pensionType}):</span><span>${cfg.pensionType==='benefit'?'+':'-'}R${pension.toFixed(2)}</span></div>`:''}
+            <div class="row" style="font-size:16px; font-weight:800; border-top:1px solid var(--border); padding-top:8px; margin-top:8px;">
+                <span>NET:</span><span>R${net.toFixed(2)}</span>
+            </div>
+        </div>`;
+}
+function renderLogs() {
+    const container = document.getElementById("logTiles");
+    const logs = JSON.parse(localStorage.getItem("logs") || "{}");
+    container.innerHTML = "";
+
+    let {start, end} = getViewCycleBounds();
+
+    if(currentView === 'week') {
+        let today = new Date();
+        start = new Date(today);
+        start.setDate(today.getDate() - today.getDay());
+        end = new Date(start);
+        end.setDate(start.getDate() + 6);
+    }
+
+    document.getElementById("cycleLabel").innerText = `${start.toLocaleDateString('en-ZA',{day:'numeric',month:'short'})} - ${end.toLocaleDateString('en-ZA',{day:'numeric',month:'short',year:'numeric'})}`;
+
+    const currentBounds = getCurrentCycleBounds();
+    const statusEl = document.getElementById("cycleStatus");
+    if(end < currentBounds.start) {
+        statusEl.innerText = "Past Cycle";
+    } else if(start > currentBounds.end) {
+        statusEl.innerText = "Future Cycle";
+    } else {
+        statusEl.innerText = "Current Cycle";
+    }
+
+    for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+        let key = toLocalDateStr(d);
+        let entry = logs[key] || { in: "", out: "" };
+        let h = getHours(entry.in, entry.out, key);
+        let isDT = isDoubleTime(key);
+
+        let tile = document.createElement("div");
+        tile.className = "log-tile";
+        if(isHoliday(key)) tile.classList.add('holiday');
+        tile.onclick = (e) => { if(!['INPUT','BUTTON'].includes(e.target.tagName)) tile.querySelector('.edit-form').style.display = tile.querySelector('.edit-form').style.display === 'none'? 'block' : 'none'; };
+        tile.innerHTML = `
+            <div class="row"><b>${d.toLocaleDateString('en-ZA',{weekday:'short',day:'numeric'})}</b> <span>${h.toFixed(1)} hrs ${isDT?'(2×)':''}</span></div>
+            <div class="edit-form" style="display:none;">
+                <div class="edit-grid">
+                    <div><label>In</label><input type="time" id="in-${key}" class="theme-input" value="${entry.in}"></div>
+                    <div><label>Out</label><input type="time" id="out-${key}" class="theme-input" value="${entry.out}"></div>
+                </div>
+                <div class="btn-row">
+                    <button class="btn-save" onclick="saveDay('${key}')">Save</button>
+                    <button class="btn-clear" onclick="clearDay('${key}')">Clear</button>
+                </div>
+            </div>`;
+        container.appendChild(tile);
+    }
+
+    const viewCalc = calculateCycleStats(start, end);
+    const viewEstimateHTML = renderEstimateCard(viewCalc.stats, viewCalc.bonus, viewCalc.allowances, viewCalc.gross, viewCalc.tax, viewCalc.pension, viewCalc.net, currentView==='week'?'Week Estimate':'Cycle Estimate');
+    document.getElementById("monthlyTotal").innerHTML = viewEstimateHTML;
+
+    const currentCalc = calculateCycleStats(currentBounds.start, currentBounds.end);
+    const homeEstimateHTML = renderEstimateCard(currentCalc.stats, currentCalc.bonus, currentCalc.allowances, currentCalc.gross, currentCalc.tax, currentCalc.pension, currentCalc.net, 'Current Cycle Estimate');
+    document.getElementById("homeEstimate").innerHTML = homeEstimateHTML;
+
+    let perc = Math.min((currentCalc.net / parseFloat(cfg.target)) * 100, 100);
+    document.getElementById("progressPercent").innerText = Math.round(perc) + "%";
+    document.getElementById("progressAmount").innerText = `R${currentCalc.net.toFixed(0)} / R${parseFloat(cfg.target).toFixed(0)}`;
+}
+function saveDay(key) {
+    let l = JSON.parse(localStorage.getItem("logs") || "{}");
+    l[key] = {
+        in: document.getElementById('in-'+key).value,
+        out: document.getElementById('out-'+key).value
+    };
+    localStorage.setItem("logs", JSON.stringify(l));
+    renderLogs(); updateToday(); showToast("Saved");
+}
+
+function clearDay(key) {
+    let l = JSON.parse(localStorage.getItem("logs") || "{}");
+    delete l[key];
+    localStorage.setItem("logs", JSON.stringify(l));
+    renderLogs(); updateToday();
+}
+
+function updateToday() {
+    let k = toLocalDateStr(new Date());
+    let entry = JSON.parse(localStorage.getItem("logs") || "{}")[k];
+    let h = getHours(entry?.in, entry?.out, k);
+    let isDT = isDoubleTime(k);
+    let pay = isDT? h * parseFloat(cfg.rate) * 2 : h * parseFloat(cfg.rate);
+    document.getElementById("todaySummary").innerText = (entry && entry.in)? `Clocked: ${entry.in} - ${entry.out || '...'} (${h.toFixed(1)}h${isDT?' (2×)':''})` : "No hours logged.";
+    document.getElementById("todayPay").innerText = `Earnings: R${pay.toFixed(2)}`;
+}
+
+function saveSettings() {
+    cfg = {
+        rate: parseFloat(document.getElementById("rateInput").value),
+        target: parseFloat(document.getElementById("targetInput").value),
+        bonus: parseFloat(document.getElementById("bonusInput").value),
+        medical: parseFloat(document.getElementById("medicalInput").value),
+        accom: parseFloat(document.getElementById("accomInput").value),
+        other: parseFloat(document.getElementById("otherInput").value),
+        pension: parseFloat(document.getElementById("pensionInput").value),
+        pensionType: cfg.pensionType,
+        otThreshold: parseFloat(document.getElementById("otThresholdInput").value),
+        cycleStart: parseInt(document.getElementById("cycleStartInput").value),
+        shiftInc: parseFloat(document.getElementById("shiftIncInput").value),
+        country: document.getElementById("countryInput").value
+    };
+    localStorage.setItem("settings", JSON.stringify(cfg));
+    document.getElementById("settingsDrawer").classList.remove("open");
+    renderLogs(); showToast("Settings Applied");
+}
+
+function showArchiveModal() {
+    modalAction = 'archive';
+    document.getElementById('modalTitle').innerText = 'Archive Cycle?';
+    document.getElementById('modalText').innerText = 'Saves current logs and clears view.';
+    document.getElementById('modalConfirmBtn').innerText = 'Yes, Archive';
+    document.getElementById('modalConfirmBtn').style.background = 'var(--accent)';
+    document.getElementById('customModal').style.display='flex';
+}
+
+function showExportModal() {
+    modalAction = 'export';
+    document.getElementById('modalTitle').innerText = 'Download CSV?';
+    document.getElementById('modalText').innerText = 'Export current cycle logs as CSV file.';
+    document.getElementById('modalConfirmBtn').innerText = 'Yes, Download';
+    document.getElementById('modalConfirmBtn').style.background = 'var(--accent)';
+    document.getElementById('customModal').style.display='flex';
+}
+
+function showDeleteModal(id) {
+    modalAction = 'delete';
+    modalActionId = id;
+    document.getElementById('modalTitle').innerText = 'Delete Archive?';
+    document.getElementById('modalText').innerText = 'This cannot be undone.';
+    document.getElementById('modalConfirmBtn').innerText = 'Yes, Delete';
+    document.getElementById('modalConfirmBtn').style.background = 'var(--danger)';
+    document.getElementById('customModal').style.display='flex';
+}
+
+function confirmModalAction() {
+    if(modalAction === 'archive') {
+        let h = JSON.parse(localStorage.getItem("history") || "[]");
+        let netText = document.getElementById("monthlyTotal").querySelector('.row:last-child span:last-child').innerText;
+        let cycleText = document.getElementById("cycleLabel").innerText;
+        let logs = JSON.parse(localStorage.getItem("logs") || "{}");
+
+        let {start, end} = getViewCycleBounds();
+        const calc = calculateCycleStats(start, end);
+
+        h.push({
+            id: Date.now(),
+            date: toLocalDateStr(new Date()),
+            cycle: cycleText,
+            amount: netText,
+            logs: logs,
+            stats: calc
+        });
+        localStorage.setItem("history", JSON.stringify(h));
+        localStorage.setItem("logs", "{}");
+        renderHistory();
+        renderLogs();
+        showToast("Archived");
+    } else if(modalAction === 'export') {
+        exportCSV();
+    } else if(modalAction === 'delete') {
+        let h = JSON.parse(localStorage.getItem("history") || "[]");
+        h = h.filter(item => item.id!== modalActionId);
+        localStorage.setItem("history", JSON.stringify(h));
+        renderHistory();
+        showToast("Deleted");
+    }
+    document.getElementById('customModal').style.display='none';
+}
+
+function renderHistory() {
+    let h = JSON.parse(localStorage.getItem("history") || "[]");
+    const container = document.getElementById("historyTables");
+    container.innerHTML = h.length? h.reverse().map(item => {
+        const estimateHTML = item.stats? renderEstimateCard(item.stats.stats, item.stats.bonus, item.stats.allowances, item.stats.gross, item.stats.tax, item.stats.pension, item.stats.net, 'Archived Cycle') : '';
+        return `
+        <div class="archive-tile" onclick="toggleArchiveDetails(${item.id})">
+            <div class="row"><b>${item.cycle}</b><span>${item.amount}</span></div>
+            <div class="archive-details" id="details-${item.id}" style="display:none;">
+                <div style="font-size:11px; color:var(--muted); margin-bottom:10px;">Archived: ${item.date}</div>
+                ${estimateHTML}
+                <div class="btn-row" style="margin-top:12px;">
+                    <button class="btn-clear" onclick="event.stopPropagation(); showDeleteModal(${item.id})">Delete Archive</button>
+                </div>
+            </div>
+        </div>
+    `}).join('') : '<p style="color:var(--muted); text-align:center;">No archives yet.</p>';
+}
+
+function toggleArchiveDetails(id) {
+    const el = document.getElementById(`details-${id}`);
+    if(el) el.style.display = el.style.display === 'none'? 'block' : 'none';
+}
+
+function exportCSV() {
+    const logs = JSON.parse(localStorage.getItem("logs") || "{}");
+    let {start, end} = getViewCycleBounds();
+
+    let csv = "Date,Day,In,Out,Hours,Type,Pay\n";
+    for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+        let key = toLocalDateStr(d);
+        let entry = logs[key] || { in: "", out: "" };
+        let h = getHours(entry.in, entry.out, key);
+        let isDT = isDoubleTime(key);
+        let pay = isDT? h * parseFloat(cfg.rate) * 2 : h * parseFloat(cfg.rate);
+        csv += `${key},${d.toLocaleDateString('en-ZA',{weekday:'short'})},${entry.in},${entry.out},${h.toFixed(2)},${isDT?'Double':'Normal'},${pay.toFixed(2)}\n`;
+    }
+
+    let blob = new Blob([csv], { type: 'text/csv' });
+    let url = URL.createObjectURL(blob);
+    let a = document.createElement('a');
+    a.href = url;
+    a.download = `salary-cycle-${toLocalDateStr(start)}.csv`;
+    a.click();
+    showToast("CSV Downloaded");
+}
+
+function toggleTheme() {
+    document.body.classList.toggle('light');
+    localStorage.setItem("theme", document.body.classList.contains('light')? 'light' : 'dark');
+}
+
+function switchPage(pageName, instant = false) {
+    const wrapper = document.getElementById('pageWrapper');
+    const index = pages.indexOf(pageName);
+    if(instant) wrapper.style.transition = 'none';
+    wrapper.style.transform = `translateX(-${index * 100}vw)`;
+    if(instant) setTimeout(() => wrapper.style.transition = 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)', 50);
+
+    document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
+    document.querySelector(`nav button[data-page="${pageName}"]`).classList.add('active');
+    currentPage = pageName;
+    if(pageName === 'logs') renderLogs();
+    if(pageName === 'history') renderHistory();
+}
+
+document.getElementById("settingsBtn").onclick = () => document.getElementById("settingsDrawer").classList.add("open");
+document.getElementById("closeSettingsBtn").onclick = () => document.getElementById("settingsDrawer").classList.remove("open");
+document.getElementById("clockInBtn").onclick = () => {
+    let today = toLocalDateStr(new Date());
+    let time = document.getElementById('clockInInput').value;
+    if(!time) { showToast("Set a time first"); return; }
+    let l = JSON.parse(localStorage.getItem("logs") || "{}");
+    if(!l[today]) l[today] = {in:"", out:""};
+    l[today].in = time;
+    localStorage.setItem("logs", JSON.stringify(l));
+    updateToday(); renderLogs(); showToast("Clocked In");
+};
+document.getElementById("clockOutBtn").onclick = () => {
+    let today = toLocalDateStr(new Date());
+    let time = document.getElementById('clockOutInput').value;
+    if(!time) { showToast("Set a time first"); return; }
+    let l = JSON.parse(localStorage.getItem("logs") || "{}");
+    if(!l[today]) l[today] = {in:"", out:""};
+    l[today].out = time;
+    localStorage.setItem("logs", JSON.stringify(l));
+    updateToday(); renderLogs(); showToast("Clocked Out");
+};
+document.getElementById("saveSettingsBtn").onclick = saveSettings;
+document.getElementById("themeToggleBtn").onclick = toggleTheme;
+document.getElementById("clearDataBtn").onclick = () => {
+    if(confirm("Delete all logs and settings? This cannot be undone.")) {
+        localStorage.clear();
+        location.reload();
+    }
+};
+
+document.querySelectorAll('nav button').forEach(btn => {
+    btn.onclick = () => switchPage(btn.dataset.page);
+});
+
+const wrapper = document.getElementById('pageWrapper');
+
+wrapper.addEventListener('touchstart', e => {
+    touchStartX = e.touches[0].clientX;
+    touchStartY = e.touches[0].clientY;
+    startTranslate = -pages.indexOf(currentPage) * window.innerWidth;
+    isDragging = false;
+    isScrolling = false;
+    wrapper.style.transition = 'none';
+}, {passive: true});
+
+wrapper.addEventListener('touchmove', e => {
+    if(isScrolling) return;
+
+    const currentX = e.touches[0].clientX;
+    const currentY = e.touches[0].clientY;
+    const diffX = currentX - touchStartX;
+    const diffY = currentY - touchStartY;
+
+    if(!isDragging &&!isScrolling) {
+        if(Math.abs(diffY) > Math.abs(diffX)) {
+            isScrolling = true;
+            wrapper.style.transform = `translateX(-${pages.indexOf(currentPage) * 100}vw)`;
+            wrapper.style.transition = 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
+            return;
+        } else if(Math.abs(diffX) > 10) {
+            isDragging = true;
+        }
+    }
+
+    if(!isDragging) return;
+
+    e.preventDefault();
+    const newTranslate = startTranslate + diffX;
+    const maxTranslate = 0;
+    const minTranslate = -(pages.length - 1) * window.innerWidth;
+
+    if(newTranslate > maxTranslate) {
+        wrapper.style.transform = `translateX(${maxTranslate + (newTranslate - maxTranslate) * 0.3}px)`;
+    } else if(newTranslate < minTranslate) {
+        wrapper.style.transform = `translateX(${minTranslate + (newTranslate - minTranslate) * 0.3}px)`;
+    } else {
+        wrapper.style.transform = `translateX(${newTranslate}px)`;
+    }
+}, {passive: false});
+
+wrapper.addEventListener('touchend', e => {
+    if(isScrolling ||!isDragging) {
+        isDragging = false;
+        isScrolling = false;
+        return;
+    }
+
+    isDragging = false;
+    wrapper.style.transition = 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
+
+    const diffX = e.changedTouches[0].clientX - touchStartX;
+    const threshold = window.innerWidth * 0.2;
+    const currentIndex = pages.indexOf(currentPage);
+
+    if(Math.abs(diffX) > threshold) {
+        if(diffX > 0 && currentIndex > 0) {
+            switchPage(pages[currentIndex - 1]);
+        } else if(diffX < 0 && currentIndex < pages.length - 1) {
+            switchPage(pages[currentIndex + 1]);
+        } else {
+            wrapper.style.transform = `translateX(-${currentIndex * 100}vw)`;
+        }
+    } else {
+        wrapper.style.transform = `translateX(-${currentIndex * 100}vw)`;
+    }
+}, {passive: true});
+
+function showToast(m) { let t = document.getElementById("toast"); t.innerText = m; t.style.visibility = 'visible'; setTimeout(() => t.style.visibility = 'hidden', 2000); }
+
+window.onload = () => {
+    if (localStorage.getItem("theme") === "light") document.body.classList.add('light');
+    document.getElementById("rateInput").value = cfg.rate;
+    document.getElementById("targetInput").value = cfg.target;
+    document.getElementById("bonusInput").value = cfg.bonus;
+    document.getElementById("medicalInput").value = cfg.medical;
+    document.getElementById("accomInput").value = cfg.accom;
+    document.getElementById("otherInput").value = cfg.other;
+    document.getElementById("pensionInput").value = cfg.pension;
+    setPensionType(cfg.pensionType);
+    document.getElementById("otThresholdInput").value = cfg.otThreshold;
+    document.getElementById("cycleStartInput").value = cfg.cycleStart;
+    document.getElementById("shiftIncInput").value = cfg.shiftInc;
+    document.getElementById("countryInput").value = cfg.country;
+    switchPage('home', true);
+    renderLogs(); updateToday();
+};
+
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/sw.js');
+}
+  </script>
+</body>
+</html>

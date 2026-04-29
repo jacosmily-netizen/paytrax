@@ -1,0 +1,8 @@
+[{
+      "relation": ["delegate_permission/common.handle_all_urls"],
+      "target": {
+        "namespace": "android_app",
+        "package_name": "com.paytrax.app",
+        "sha256_cert_fingerprints": ["10:AF:3D:41:25:A3:EB:25:40:6C:DD:92:03:A0:1D:1A:52:ED:01:FB:89:2F:DA:28:58:B3:25:D5:D9:1B:9E:7F"]
+      }
+    }]
